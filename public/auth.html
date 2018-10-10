@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+  Authenticating...
+
+  <script>
+    var hashParams = new URLSearchParams(location.hash.slice(1));
+    var accessToken = hashParams.get('token_type') === 'Bearer' && hashParams.get('access_token');
+
+    if (accessToken) {
+      window.opener && window.opener.postMessage(
+        JSON.stringify({
+          type: 'access_token',
+          accessToken
+        }),
+        '*'
+      );
+      window.close();
+    } else {
+      var queryParams = new URLSearchParams(location.search.slice(1));
+
+      if (!queryParams.has('client_id')) {
+        throw new Error('Must provide client_id query parameter')
+      }
+
+      queryParams.set('redirect_uri', location.origin + location.pathname);
+      queryParams.set('response_type', 'token');
+
+      location.href = 'https://accounts.spotify.com/authorize?' + queryParams;
+    }
+  </script>
+</body>
+
+</html>

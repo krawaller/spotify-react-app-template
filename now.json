@@ -1,0 +1,12 @@
+{
+  "type": "static",
+  "alias": "spotify-react-app-template.now.sh",
+  "static": {
+    "rewrites": [
+      {
+        "source": "**/!(auth)",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
