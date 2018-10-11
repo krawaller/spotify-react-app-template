@@ -1,11 +1,8 @@
-import querystring from 'querystring';
-
 const client_id = '518725f184ea4227b4f115aaf9886a10';
 const scope =
   'streaming user-read-birthdate user-read-email user-read-private user-top-read';
 
-let accessToken;
-
+let accessToken = getTokenFromUrlHash();
 const spfetch = (global.spfetch = async (input, init) => {
   if (!accessToken) await spfetch.login();
   if (!init) init = {};
@@ -23,12 +20,17 @@ const spfetch = (global.spfetch = async (input, init) => {
 });
 
 spfetch.login = async () =>
-  (accessToken = accessToken || (await fetchTokenFromPopup()));
+  (accessToken =
+    accessToken || getTokenFromUrlHash() || (await fetchTokenFromPopup()));
 spfetch.logout = () => (accessToken = null);
 spfetch.isLoggedIn = () => !!accessToken;
 spfetch.getToken = () => accessToken;
 
 export default spfetch;
+
+function getTokenFromUrlHash() {
+  return new URLSearchParams(global.location.hash.slice(1)).get('access_token');
+}
 
 async function fetchTokenFromPopup() {
   return new Promise((resolve, reject) => {
@@ -48,8 +50,11 @@ async function fetchTokenFromPopup() {
         if (type === 'access_token') {
           clearTimeout(timeout);
           resolve(accessToken);
+          window.removeEventListener('message', onMessage, false);
+          global.location.hash = new URLSearchParams([
+            ['access_token', accessToken]
+          ]).toString();
         }
-        window.removeEventListener('message', onMessage, false);
       },
       false
     );

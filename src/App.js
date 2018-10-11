@@ -19,7 +19,7 @@ import fetchPlayer from './fetchPlayer';
 import spfetch from './spfetch';
 
 class App extends Component {
-  state = { isLoggedIn: false };
+  state = { isLoggedIn: spfetch.isLoggedIn() };
 
   handleLoginClick = async () => {
     this.setState({
@@ -63,7 +63,7 @@ class LoggedInScreen extends Component {
   }
 
   async initPlayer() {
-    const player = await fetchPlayer();
+    const player = (global.player = await fetchPlayer());
     this.setState({ player });
     player.addListener('player_state_changed', playerState =>
       this.setState({
