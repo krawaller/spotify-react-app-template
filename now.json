@@ -5,7 +5,7 @@
   "static": {
     "rewrites": [
       {
-        "source": "**",
+        "source": "**/!(auth)",
         "destination": "/index.html"
       }
     ]
