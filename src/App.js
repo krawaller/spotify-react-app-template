@@ -19,6 +19,34 @@ import fetchPlayer from './fetchPlayer';
 import spfetch from './spfetch';
 
 class App extends Component {
+  state = { isLoggedIn: false };
+
+  handleLoginClick = async () => {
+    this.setState({
+      isLoggedIn: await spfetch.login()
+    });
+  };
+
+  render() {
+    const { isLoggedIn } = this.state;
+    return isLoggedIn ? (
+      <LoggedInScreen />
+    ) : (
+      <div className="login">
+        <Button
+          variant="contained"
+          color="primary"
+          className={''}
+          onClick={this.handleLoginClick}
+        >
+          Log In With Spotify
+        </Button>
+      </div>
+    );
+  }
+}
+
+class LoggedInScreen extends Component {
   state = {
     isLoaded: false,
     name: null,
@@ -91,6 +119,7 @@ class App extends Component {
     return (
       <div className="App">
         <CssBaseline />
+
         <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" color="inherit">
@@ -137,7 +166,7 @@ class App extends Component {
           </Toolbar>
         </AppBar>
 
-        {!!name && (
+        {name && (
           <Card className="Card">
             <CardActionArea>
               <CardMedia className="CardMedia" image={imageUrl} title={name} />

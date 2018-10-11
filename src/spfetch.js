@@ -1,29 +1,13 @@
 import querystring from 'querystring';
 
-const client_id = '360f2e3776ed4f7c878f2097e6bf947a';
+const client_id = '518725f184ea4227b4f115aaf9886a10';
 const scope =
-  'user-follow-read user-library-read playlist-read-private user-library-modify user-follow-modify playlist-modify-public playlist-modify-private user-modify-playback-state';
+  'streaming user-read-birthdate user-read-email user-read-private user-top-read';
 
-function getTokenFromUrlHash() {
-  if (!global.location) return null;
-  let params = querystring.parse(global.location.hash.slice(1));
-  return (params.token_type === 'Bearer' && params.access_token) || null;
-}
+let accessToken;
 
-function refreshToken() {
-  global.location = `https://accounts.spotify.com/authorize?${querystring.stringify(
-    {
-      response_type: 'token',
-      client_id,
-      scope,
-      redirect_uri: `${global.location.origin}${global.location.pathname}`
-    }
-  )}`;
-}
-
-let accessToken = getTokenFromUrlHash();
-const spfetch = (global.spfetch = (input, init) => {
-  if (!accessToken) spfetch.login();
+const spfetch = (global.spfetch = async (input, init) => {
+  if (!accessToken) await spfetch.login();
   if (!init) init = {};
   if (!init.headers) init.headers = {};
   init.headers.Authorization = `Bearer ${accessToken}`;
@@ -32,15 +16,66 @@ const spfetch = (global.spfetch = (input, init) => {
       ? input
       : `https://api.spotify.com${input.startsWith('/') ? '' : '/'}${input}`,
     init
-  ).then(response => {
-    if (response.status === 401) refreshToken();
+  ).then(async response => {
+    if (response.status === 401) await fetchTokenFromPopup();
     return response;
   });
 });
-spfetch.login = () =>
-  (accessToken = accessToken || getTokenFromUrlHash() || refreshToken());
+
+spfetch.login = async () =>
+  (accessToken = accessToken || (await fetchTokenFromPopup()));
 spfetch.logout = () => (accessToken = null);
 spfetch.isLoggedIn = () => !!accessToken;
 spfetch.getToken = () => accessToken;
 
 export default spfetch;
+
+async function fetchTokenFromPopup() {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      reject,
+      20000,
+      new Error('Timeout getting token')
+    );
+    window.addEventListener(
+      'message',
+      function onMessage(event) {
+        let data = event.data;
+        try {
+          data = JSON.parse(event.data);
+        } catch (error) {}
+        const { type, accessToken } = data || {};
+        if (type === 'access_token') {
+          clearTimeout(timeout);
+          resolve(accessToken);
+        }
+        window.removeEventListener('message', onMessage, false);
+      },
+      false
+    );
+
+    const width = 450;
+    const height = 730;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    const url = new URL(
+      window.location.hostname === 'localhost'
+        ? window.location.origin + '/auth.html'
+        : 'https://spotify-react-app-template.now.sh/auth'
+    );
+    url.searchParams.set('client_id', client_id);
+    url.searchParams.set('scope', scope);
+
+    window.open(
+      (window.location.hostname === 'localhost'
+        ? `//${window.location.host}/auth.html`
+        : 'https://spotify-react-app-template.now.sh/auth') +
+        `?client_id=${client_id}&scope=${encodeURIComponent(scope)}`,
+      'Spotify',
+      `menubar=no,location=no,resizable=no,scrollbars=no,status=no, width=${width}, height=${height}, top=${top}, left=${left}`
+    );
+  });
+}
+
+global.fetchTokenFromPopup = fetchTokenFromPopup;
