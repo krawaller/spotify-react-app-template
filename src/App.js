@@ -183,7 +183,7 @@ class LoggedInScreen extends Component {
                 color="primary"
                 onClick={this.handlePlayTopTracks}
               >
-                Play Top Tracks
+                Play Top Tracks!
               </Button>
             </CardActions>
           </Card>
