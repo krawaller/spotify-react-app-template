@@ -57,9 +57,9 @@ class LoggedInScreen extends Component {
     playerState: {}
   };
 
-  componentDidMount() {
+  async componentDidMount() {
+    await this.getMe();
     this.initPlayer();
-    this.getMe();
   }
 
   async initPlayer() {
@@ -82,6 +82,7 @@ class LoggedInScreen extends Component {
     } = await response.json();
 
     this.setState({ isLoaded: true, name, href, imageUrl, numFollowers });
+    return true;
   }
 
   handlePlayTopTracks = async () => {

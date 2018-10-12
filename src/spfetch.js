@@ -14,7 +14,10 @@ const spfetch = (global.spfetch = async (input, init) => {
       : `https://api.spotify.com${input.startsWith('/') ? '' : '/'}${input}`,
     init
   ).then(async response => {
-    if (response.status === 401) await fetchTokenFromPopup();
+    if (response.status === 401) {
+      accessToken = await fetchTokenFromPopup();
+      return spfetch(input, init);
+    }
     return response;
   });
 });
@@ -82,5 +85,3 @@ async function fetchTokenFromPopup() {
     );
   });
 }
-
-global.fetchTokenFromPopup = fetchTokenFromPopup;
