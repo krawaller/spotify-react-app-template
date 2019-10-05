@@ -1,4 +1,4 @@
 {
   "client_id": "518725f184ea4227b4f115aaf9886a10",
-  "scope": "streaming user-read-birthdate user-read-email user-read-private user-top-read"
+  "scope": "streaming user-read-email user-read-private user-top-read"
 }
